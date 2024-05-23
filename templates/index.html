@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monument Prediction</title>
+    <!-- Include the latest Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: rgb(0, 148, 254);
+            color: #fff;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        header h1 {
+            font-size: 36px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 90vw;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgb(0, 148, 254);
+            border-radius: 5px;
+            /* display: flex; */
+        }
+
+        .main-heading h1 {
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 26px;
+            letter-spacing: 1px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-heading h1::after {
+            content: " ";
+            display: block;
+            border-bottom: 2px solid #ccc;
+            background-color: #f8f8f8;
+            margin-top: 20px;
+        }
+
+        .form-container {
+            text-align: center;
+            margin-top: 20px;
+            display: flex;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input[type="file"] {
+            margin: 10px;
+            font-size: 26px;
+        }
+
+        button {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        #map {
+            height: 400px;
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Monument Prediction</h1>
+    </header>
+    <div class="container">
+        <div class="form-container">
+            <div id="div1">
+                <div class="main-heading">
+                    <h1>Open the image of an Indian monument</h1>
+                </div>
+                <form action="/monuments_identification" method="post" enctype="multipart/form-data">
+                    <input type="file" name="image" accept="image/*" required>
+                    <button type="submit">Predict</button>
+                </form>
+                <div id="map_div">
+                    {% if monument_name and monument_coordinates %}
+                    <div id="heading_map">
+                        <h2>Predicted Monument: {{ monument_name }}</h2>
+                        <div id="main-map"></div>
+
+                    </div>
+
+                    <script>
+                        var monumentCoordinates = {{ monument_coordinates | tojson | safe }};
+                        var city = "{{ city }}";
+                        var otherMonuments = {{ other_monuments | tojson | safe }};  // Include other_monuments directly
+
+                        var mainMap = L.map('main-map').setView(monumentCoordinates, 13);
+                        // var otherMonumentsMap = L.map('other-monuments-map').setView(monumentCoordinates, 13);
+
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        }).addTo(mainMap);
+
+                        L.marker(monumentCoordinates).addTo(mainMap)
+                            .bindPopup('{{ monument_name }}');
+
+                    </script>
+
+                    <style>
+
+                        #main-map
+                        {
+                            height: 400px;
+                            margin-top: 20px;
+                        }
+                    </style>
+                    {% endif %}
+                </div>
+            </div>
+            <div id="div2">
+                {% if monument_name and monument_coordinates %}
+                <div id="info"></div>
+                <script>
+                    var monument_name = '{{monument_name}}'
+                    // console.log(monument_name)
+                    var infotag = document.getElementById('info')
+                    var iframe_tag = '<iframe src="https://en.wikipedia.org/wiki/{{monument_name}}"></iframe>'
+                    // console.log(iframe_tag)
+                    infotag.innerHTML = iframe_tag
+                </script>
+                <style>
+                    #div2 {
+                        margin-left: 50px;
+                        width: 75%;
+                    }
+
+                    #info iframe {
+                        width: 100%;
+                        height: 640px;
+                    }
+                </style>
+                {% endif %}
+            </div>
+        </div>
+        <div id="div3">
+            <div id="map_div">
+                <h1>
+                    Other Monuments To Visit near '{{monument_name}}'
+                </h2>
+                {% if monument_name and monument_coordinates %}
+                <div id="heading_map2">
+                    <div id="nearest_monuments"></div>
+                    <div id="other-monuments-map"></div>
+                </div>
+                <script>
+                    var monumentCoordinates = {{ monument_coordinates | tojson | safe }};
+                    var city = "{{ city }}";
+                    var otherMonuments = {{ other_monuments | tojson | safe }};  // Include other_monuments directly
+                    var nearest_monuments = [];
+
+                    var otherMonumentsMap = L.map('other-monuments-map').setView(monumentCoordinates, 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(otherMonumentsMap);
+
+                    for (var i = 0; i < otherMonuments.length; i++) {
+                        var otherMonument = otherMonuments[i];
+                        var otherMonumentCoordinates = otherMonument.coordinates;
+                        L.marker(otherMonumentCoordinates).addTo(otherMonumentsMap)
+                            .bindPopup(otherMonument.name);
+                        // console.log(otherMonument.name);
+                        nearest_monuments.push(otherMonument.name);
+                    }
+                    console.log(nearest_monuments.toString());
+
+                    var nearest_div = document.getElementById('nearest_monuments');
+                    var nearest_div_content = '';
+                    for (var i = 0; i < nearest_monuments.length; i++) {
+                        var str = nearest_monuments[i].replace(/[^a-zA-Z]/g, ' ');
+                        console.log(str);
+                        nearest_div_content += str;
+                        nearest_div_content += '<br>';
+                    }
+
+                    nearest_div.innerHTML = nearest_div_content;
+                </script>
+
+                <style>
+                    #map_div h1 {
+                        background-color: rgb(0, 148, 254);
+                        color: #fff;
+                        text-align: center;
+                        padding: 22px 0;
+                        text-transform: uppercase;    
+                        /* margin-left: 50px;   */
+                    }
+                    #heading_map2 {
+                        display: flex;
+                    }
+                    #nearest_monuments {
+                        width: 30%;
+                        font-size: 22px;
+                        text-align: center;
+                    }
+                    #other-monuments-map {
+                        height: 450px;
+                        width:60%;
+                        margin-top: 20px;
+                    }
+                </style>
+
+
+
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
