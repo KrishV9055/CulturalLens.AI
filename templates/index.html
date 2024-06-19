@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monument Prediction</title>
+    <title>CulturalLensAI</title>
     <!-- Include the latest Leaflet CSS and JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
@@ -95,7 +95,7 @@
 
 <body>
     <header>
-        <h1>Monument Prediction</h1>
+        <h1>CulturalLensAI</h1>
     </header>
     <div class="container">
         <div class="form-container">
@@ -170,10 +170,10 @@
         </div>
         <div id="div3">
             <div id="map_div">
+                {% if monument_name and monument_coordinates %}
                 <h1>
                     Other Monuments To Visit near '{{monument_name}}'
                 </h2>
-                {% if monument_name and monument_coordinates %}
                 <div id="heading_map2">
                     <div id="nearest_monuments"></div>
                     <div id="other-monuments-map"></div>
