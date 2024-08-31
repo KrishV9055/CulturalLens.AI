@@ -1,4 +1,4 @@
-# CulturalLensAI 🌍📸
+# CulturalLens.AI 🌍📸
 
 Discover the rich heritage of Indian monuments with CulturalLensAI! Our project helps tourists, especially foreigners, by providing the exact location, multi-lingual information, and nearby monuments for any given image of an Indian monument.
 
